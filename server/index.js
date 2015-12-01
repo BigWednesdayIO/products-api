@@ -6,6 +6,8 @@ const errorSchemas = require('hapi-error-schemas');
 const basePlugins = [{
   register: require('hapi-version-route')
 }, {
+  register: require('hapi-boom-decorators')
+}, {
   register: require('hapi-swaggered'),
   options: {
     auth: false,
