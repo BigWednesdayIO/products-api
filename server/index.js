@@ -16,7 +16,7 @@ const basePlugins = [{
   }
 }];
 
-const applicationPlugins = [];
+const applicationPlugins = [require('./products')];
 
 module.exports = callback => {
   const server = new hapi.Server({
