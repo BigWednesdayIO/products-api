@@ -224,7 +224,7 @@ describe('payload validation', () => {
         expect(response.statusCode).to.equal(400);
         expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" are not valid for product_type "test_product"]');
         expect(response.result.product_type_validation_error).to.equal(true);
-        expect(response.result.invalid_product_type_attributes).to.deep.equal([{attribute: 'test_attribute', error: '"value" at position 1 fails because ["1" must be a string]'}]);
+        expect(response.result.invalid_product_type_attributes).to.deep.equal(['"test_attribute" values fails because ["value" at position 1 fails because ["1" must be a string]]']);
       })
     );
   });

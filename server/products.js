@@ -50,7 +50,7 @@ const validateProductType = (request, reply) => {
       const validationResult = Joi.validate(attribute.values, productTypeAttribute.valuesSchema);
 
       if (validationResult.error) {
-        validationErrors.push({attribute: attribute.name, error: validationResult.error.message});
+        validationErrors.push(`"${attribute.name}" values fails because [${validationResult.error.message}]`);
       }
     } else {
       additionalAttributes.push(attribute.name);
