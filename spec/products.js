@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const expect = require('chai').expect;
 const specRequest = require('./spec_request');
 const productParameters = require('./parameters/product');
@@ -109,5 +110,38 @@ describe('/products/{id}', () => {
       specRequest({url: '/products/notexists', method: 'DELETE'})
         .then(response => expect(response.statusCode).to.equal(404))
     );
+  });
+});
+
+describe('payload validation', () => {
+  const attributes = [
+    {name: 'name', type: 'string', required: true},
+    {name: 'product_type', type: 'string', required: true},
+    {name: 'brand', type: 'string', required: true},
+    {name: 'category', type: 'string', required: true},
+    {name: 'short_description', type: 'string'},
+    {name: 'description', type: 'string'}
+  ];
+
+  [{method: 'POST', url: '/products'}, {method: 'PUT', url: '/products/1'}].forEach(request => {
+    attributes.filter(a => a.required).forEach(attribute => {
+      it(`requires ${attribute.name} for ${request.method} request`, () =>
+        specRequest({url: request.url, method: request.method, payload: _.omit(productParameters, attribute.name)})
+          .then(response => {
+            expect(response.statusCode).to.equal(400);
+            expect(response.result.message).to.equal(`child "${attribute.name}" fails because ["${attribute.name}" is required]`);
+          })
+      );
+    });
+
+    attributes.filter(a => a.type === 'string').forEach(attribute => {
+      it(`rejects non-string ${attribute.name} values for ${request.method} request`, () =>
+        specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {[attribute.name]: 1})})
+          .then(response => {
+            expect(response.statusCode).to.equal(400);
+            expect(response.result.message).to.equal(`child "${attribute.name}" fails because ["${attribute.name}" must be a string]`);
+          })
+      );
+    });
   });
 });

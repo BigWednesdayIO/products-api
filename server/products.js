@@ -4,6 +4,24 @@ const Joi = require('joi');
 
 const products = require('../lib/product_store');
 
+const baseAttributes = {
+  name: Joi.string().required().description('Product name'),
+  product_type: Joi.string().required().description('Product type'),
+  brand: Joi.string().required().description('Brand'),
+  category: Joi.string().required().description('Category'),
+  description: Joi.string().description('Description'),
+  short_description: Joi.string().description('Short description')
+};
+
+const requestSchema = Joi.object(baseAttributes).meta({className: 'ProductParameters'});
+
+const responseSchema = Joi.object(Object.assign({
+  id: Joi.string().required().description('Product identifier'),
+  _metadata: Joi.object({
+    created: Joi.date().required().description('Date the product was created')
+  }).meta({className: 'ProductMetaData'})
+}, baseAttributes)).meta({className: 'Product'});
+
 module.exports.register = (server, options, next) => {
   server.route({
     method: 'POST',
@@ -18,9 +36,12 @@ module.exports.register = (server, options, next) => {
     },
     config: {
       tags: ['api'],
+      validate: {
+        payload: requestSchema.description('The product to create')
+      },
       response: {
         status: {
-          201: Joi.object().meta({className: 'Product'}).description('The created product')
+          201: responseSchema.description('The created product')
         }
       }
     }
@@ -50,7 +71,7 @@ module.exports.register = (server, options, next) => {
       },
       response: {
         status: {
-          200: Joi.object().meta({className: 'Product'}).description('A product')
+          200: responseSchema.description('A product')
         }
       }
     }
@@ -76,11 +97,12 @@ module.exports.register = (server, options, next) => {
       validate: {
         params: {
           id: Joi.string().required().description('The product identifier')
-        }
+        },
+        payload: requestSchema.description('The product details to update')
       },
       response: {
         status: {
-          200: Joi.object().meta({className: 'Product'}).description('The updated product')
+          200: responseSchema.description('The updated product')
         }
       }
     }
