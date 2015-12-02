@@ -6,11 +6,12 @@ const products = require('../lib/product_store');
 
 const baseAttributes = {
   name: Joi.string().required().description('Product name'),
-  product_type: Joi.string().required().description('Product type'),
   brand: Joi.string().required().description('Brand'),
   category: Joi.string().required().description('Category'),
   description: Joi.string().description('Description'),
-  short_description: Joi.string().description('Short description')
+  short_description: Joi.string().description('Short description'),
+  product_type: Joi.string().valid(['1', '2', '3']).required().description('Product type'),
+  product_type_attributes: Joi.array().required().description('Additional attributes associated with the product type')
 };
 
 const requestSchema = Joi.object(baseAttributes).meta({className: 'ProductParameters'});

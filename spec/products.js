@@ -120,7 +120,8 @@ describe('payload validation', () => {
     {name: 'brand', type: 'string', required: true},
     {name: 'category', type: 'string', required: true},
     {name: 'short_description', type: 'string'},
-    {name: 'description', type: 'string'}
+    {name: 'description', type: 'string'},
+    {name: 'product_type_attributes', type: 'array', required: true}
   ];
 
   [{method: 'POST', url: '/products'}, {method: 'PUT', url: '/products/1'}].forEach(request => {
@@ -143,5 +144,13 @@ describe('payload validation', () => {
           })
       );
     });
+
+    it(`rejects unknown product_types values for ${request.method} request`, () =>
+      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type: '123'})})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result.message).to.match(/^child "product_type" fails because \["product_type" must be one of \[.*\]\]$/);
+        })
+    );
   });
 });
