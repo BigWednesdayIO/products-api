@@ -13,7 +13,7 @@ module.exports.register = (server, options, next) => {
         .then(product => reply(product).created(`/products/${product.id}`))
         .catch(err => {
           console.log(err);
-          reply.badImplementation(err);
+          reply.badImplementation();
         });
     },
     config: {
@@ -21,6 +21,36 @@ module.exports.register = (server, options, next) => {
       response: {
         status: {
           201: Joi.object().meta({className: 'Product'}).description('The created product')
+        }
+      }
+    }
+  });
+
+  server.route({
+    method: 'GET',
+    path: '/products/{id}',
+    handler: (request, reply) => {
+      products.get(request.params.id)
+        .then(reply)
+        .catch(err => {
+          if (err.name === 'EntityNotFoundError') {
+            return reply.notFound();
+          }
+
+          console.log(err);
+          reply.badImplementation();
+        });
+    },
+    config: {
+      tags: ['api'],
+      validate: {
+        params: {
+          id: Joi.string().required().description('The product identifier')
+        }
+      },
+      response: {
+        status: {
+          200: Joi.object().meta({className: 'Product'}).description('A product')
         }
       }
     }

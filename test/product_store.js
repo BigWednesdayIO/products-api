@@ -54,4 +54,44 @@ describe('Product store', () => {
         _.eq(value.data._metadata_created, stubbedDate), 'created date'));
     });
   });
+
+  describe('get', () => {
+    const existingProduct = {
+      id: 'abcd1',
+      name: 'an existing product',
+      category: 'baked beans',
+      _metadata: {created: new Date()}
+    };
+
+    beforeEach(() => {
+      sandbox.stub(dataset, 'get', (key, callback) => {
+        if (_.last(key.path) === existingProduct.id) {
+          return callback(null, {
+            key: {path: ['Product', existingProduct.id]},
+            data: Object.assign({
+              _metadata_created: existingProduct._metadata.created
+            }, _.omit(existingProduct, ['id', '_metadata']))
+          });
+        }
+
+        callback();
+      });
+    });
+
+    it('returns a product', () =>
+      productStore.get(existingProduct.id)
+        .then(product => expect(product).to.deep.equal(existingProduct))
+    );
+
+    it('throws EntityNotFoundError for unknown product', () =>
+      productStore.get('notexists')
+        .then(() => {
+          throw new Error('expected EntityNotFoundError');
+        })
+        .catch(err => {
+          expect(err).to.be.an('error');
+          expect(err).to.have.property('name', 'EntityNotFoundError');
+        })
+    );
+  });
 });
