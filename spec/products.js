@@ -145,12 +145,87 @@ describe('payload validation', () => {
       );
     });
 
-    it(`rejects unknown product_types values for ${request.method} request`, () =>
+    it(`rejects unknown product_type values for ${request.method} request`, () =>
       specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type: '123'})})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result.message).to.match(/^child "product_type" fails because \["product_type" must be one of \[.*\]\]$/);
         })
+    );
+
+    it(`validates that product_type_attributes have names for ${request.method}`, () =>
+      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type_attributes: [{values: []}]})})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" at position 0 fails because [child "name" fails because ["name" is required]]]');
+        })
+    );
+
+    it(`validates that product_type_attributes name is a string for ${request.method}`, () =>
+      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 1, values: []}]})})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" at position 0 fails because [child "name" fails because ["name" must be a string]]]');
+        })
+    );
+
+    it(`validates that product_type_attributes have values for ${request.method}`, () =>
+      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 'test_attribute'}]})})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" at position 0 fails because [child "values" fails because ["values" is required]]]');
+        })
+    );
+
+    it(`validates that product_type_attributes values is an array for ${request.method}`, () =>
+      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 'test_attribute', values: 1}]})})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" at position 0 fails because [child "values" fails because ["values" must be an array]]]');
+        })
+    );
+
+    it(`validates that product_type_attributes contains required attributes for ${request.method} request product_type`, () =>
+      specRequest({
+        url: request.url,
+        method: request.method,
+        payload: Object.assign({}, productParameters, {product_type_attributes: []}
+      )}).then(response => {
+        expect(response.statusCode).to.equal(400);
+        expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" are not valid for product_type "test_product"]');
+        expect(response.result.product_type_validation_error).to.equal(true);
+        expect(response.result.required_product_type_attributes).to.deep.equal(['test_attribute']);
+      })
+    );
+
+    it(`validates that product_type_attributes does not contain unknown attribute names for ${request.method} request product_type`, () =>
+      specRequest({
+        url: request.url,
+        method: request.method,
+        payload: Object.assign({},
+          productParameters,
+          {product_type_attributes: [{name: 'test_attribute', values: []}, {name: 'extra_attribute1', values: []}, {name: 'extra_attribute2', values: []}]}
+      )}).then(response => {
+        expect(response.statusCode).to.equal(400);
+        expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" are not valid for product_type "test_product"]');
+        expect(response.result.product_type_validation_error).to.equal(true);
+        expect(response.result.forbidden_product_type_attributes).to.deep.equal(['extra_attribute1', 'extra_attribute2']);
+      })
+    );
+
+    it(`validates that product_type_attributes does not contain invalid value types for ${request.method} request product_type`, () =>
+      specRequest({
+        url: request.url,
+        method: request.method,
+        payload: Object.assign({},
+          productParameters,
+          {product_type_attributes: [{name: 'test_attribute', values: ['1', 2]}]}
+      )}).then(response => {
+        expect(response.statusCode).to.equal(400);
+        expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" are not valid for product_type "test_product"]');
+        expect(response.result.product_type_validation_error).to.equal(true);
+        expect(response.result.invalid_product_type_attributes).to.deep.equal([{attribute: 'test_attribute', error: '"value" at position 1 fails because ["1" must be a string]'}]);
+      })
     );
   });
 });

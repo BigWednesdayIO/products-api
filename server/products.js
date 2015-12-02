@@ -3,6 +3,14 @@
 const Joi = require('joi');
 
 const products = require('../lib/product_store');
+const productTypes = [
+  {
+    name: 'test_product',
+    attributes: [
+      {name: 'test_attribute', required: true, valuesSchema: Joi.array().items(Joi.string()).required()}
+    ]
+  }
+];
 
 const baseAttributes = {
   name: Joi.string().required().description('Product name'),
@@ -10,8 +18,11 @@ const baseAttributes = {
   category: Joi.string().required().description('Category'),
   description: Joi.string().description('Description'),
   short_description: Joi.string().description('Short description'),
-  product_type: Joi.string().valid(['1', '2', '3']).required().description('Product type'),
-  product_type_attributes: Joi.array().required().description('Additional attributes associated with the product type')
+  product_type: Joi.string().valid(productTypes.map(t => t.name)).required().description('Product type'),
+  product_type_attributes: Joi.array().items(Joi.object({
+    name: Joi.string().required().description('Attribute name'),
+    values: Joi.array().required().description('Attribute values')
+  }).meta({className: 'ProductTypeAttribute'})).required().description('Additional attributes associated with the product type')
 };
 
 const requestSchema = Joi.object(baseAttributes).meta({className: 'ProductParameters'});
@@ -23,7 +34,58 @@ const responseSchema = Joi.object(Object.assign({
   }).meta({className: 'ProductMetaData'})
 }, baseAttributes)).meta({className: 'Product'});
 
+const validateProductType = (request, reply) => {
+  const productType = productTypes.find(type => type.name === request.payload.product_type);
+
+  const additionalAttributes = [];
+  const validationErrors = [];
+  const missingAttributes = productType.attributes
+    .filter(attribute => attribute.required && !request.payload.product_type_attributes.find(a => a.name === attribute.name))
+    .map(attribute => attribute.name);
+
+  request.payload.product_type_attributes.forEach(attribute => {
+    const productTypeAttribute = productType.attributes.find(a => a.name === attribute.name);
+
+    if (productTypeAttribute) {
+      const validationResult = Joi.validate(attribute.values, productTypeAttribute.valuesSchema);
+
+      if (validationResult.error) {
+        validationErrors.push({attribute: attribute.name, error: validationResult.error.message});
+      }
+    } else {
+      additionalAttributes.push(attribute.name);
+    }
+  });
+
+  if (additionalAttributes.length || validationErrors.length || missingAttributes.length) {
+    return reply.badRequest(
+      'child "product_type_attributes" fails because ["product_type_attributes" are not valid for product_type "test_product"]',
+      {
+        product_type_validation_error: true,
+        forbidden_product_type_attributes: additionalAttributes,
+        invalid_product_type_attributes: validationErrors,
+        required_product_type_attributes: missingAttributes
+      });
+  }
+
+  reply();
+};
+
+const formatProductTypeValidationError = (request, reply) => {
+  if (!(request.response.data && request.response.data.product_type_validation_error)) {
+    return reply.continue();
+  }
+
+  const response = Object.assign({},
+    request.response.data,
+    request.response.output.payload);
+
+  reply(response).code(400);
+};
+
 module.exports.register = (server, options, next) => {
+  server.ext('onPreResponse', formatProductTypeValidationError);
+
   server.route({
     method: 'POST',
     path: '/products',
@@ -37,6 +99,7 @@ module.exports.register = (server, options, next) => {
     },
     config: {
       tags: ['api'],
+      pre: [{method: validateProductType}],
       validate: {
         payload: requestSchema.description('The product to create')
       },
@@ -95,6 +158,7 @@ module.exports.register = (server, options, next) => {
     },
     config: {
       tags: ['api'],
+      pre: [{method: validateProductType}],
       validate: {
         params: {
           id: Joi.string().required().description('The product identifier')
