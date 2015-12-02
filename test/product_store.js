@@ -8,16 +8,37 @@ const productStore = require('../lib/product_store');
 
 describe('Product store', () => {
   const stubbedDate = new Date();
+  const existingProduct = {
+    id: 'abcd1',
+    name: 'an existing product',
+    category: 'baked beans',
+    _metadata: {created: stubbedDate}
+  };
+
   let sandbox;
   let saveStub;
   let keySpy;
+  let clock;
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    sandbox.useFakeTimers(stubbedDate.getTime());
+    clock = sandbox.useFakeTimers(stubbedDate.getTime());
 
     saveStub = sandbox.stub(dataset, 'save', (entity, callback) => callback());
     keySpy = sandbox.spy(dataset, 'key');
+
+    sandbox.stub(dataset, 'get', (key, callback) => {
+      if (_.last(key.path) === existingProduct.id) {
+        return callback(null, {
+          key: {path: ['Product', existingProduct.id]},
+          data: Object.assign({
+            _metadata_created: existingProduct._metadata.created
+          }, _.omit(existingProduct, ['id', '_metadata']))
+        });
+      }
+
+      callback();
+    });
   });
 
   afterEach(() => sandbox.restore());
@@ -56,28 +77,6 @@ describe('Product store', () => {
   });
 
   describe('get', () => {
-    const existingProduct = {
-      id: 'abcd1',
-      name: 'an existing product',
-      category: 'baked beans',
-      _metadata: {created: new Date()}
-    };
-
-    beforeEach(() => {
-      sandbox.stub(dataset, 'get', (key, callback) => {
-        if (_.last(key.path) === existingProduct.id) {
-          return callback(null, {
-            key: {path: ['Product', existingProduct.id]},
-            data: Object.assign({
-              _metadata_created: existingProduct._metadata.created
-            }, _.omit(existingProduct, ['id', '_metadata']))
-          });
-        }
-
-        callback();
-      });
-    });
-
     it('returns a product', () =>
       productStore.get(existingProduct.id)
         .then(product => expect(product).to.deep.equal(existingProduct))
@@ -85,6 +84,44 @@ describe('Product store', () => {
 
     it('throws EntityNotFoundError for unknown product', () =>
       productStore.get('notexists')
+        .then(() => {
+          throw new Error('expected EntityNotFoundError');
+        })
+        .catch(err => {
+          expect(err).to.be.an('error');
+          expect(err).to.have.property('name', 'EntityNotFoundError');
+        })
+    );
+  });
+
+  describe('update', () => {
+    const updateProductParameters = {
+      name: 'updated product',
+      category: 'beer'
+    };
+
+    beforeEach(() => {
+      clock.tick(10000);
+      return productStore.update(existingProduct.id, updateProductParameters);
+    });
+
+    it('persists data against the a key containing id', () => {
+      expect(keySpy.firstCall.returnValue.path).to.deep.equal(['Product', existingProduct.id]);
+    });
+
+    it('persists the new product attributes', () => {
+      sinon.assert.calledOnce(saveStub);
+      sinon.assert.calledWithMatch(saveStub,
+        sinon.match({key: keySpy.firstCall.returnValue, method: 'update', data: updateProductParameters}));
+    });
+
+    it('persists with the original a created date', () => {
+      sinon.assert.calledWithMatch(saveStub, sinon.match(value =>
+        _.eq(value.data._metadata_created, stubbedDate), 'created date'));
+    });
+
+    it('throws EntityNotFoundError for unknown product', () =>
+      productStore.update('notexists', updateProductParameters)
         .then(() => {
           throw new Error('expected EntityNotFoundError');
         })

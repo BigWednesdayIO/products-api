@@ -37,7 +37,7 @@ module.exports.register = (server, options, next) => {
             return reply.notFound();
           }
 
-          console.log(err);
+          console.error(err);
           reply.badImplementation();
         });
     },
@@ -51,6 +51,36 @@ module.exports.register = (server, options, next) => {
       response: {
         status: {
           200: Joi.object().meta({className: 'Product'}).description('A product')
+        }
+      }
+    }
+  });
+
+  server.route({
+    method: 'PUT',
+    path: '/products/{id}',
+    handler: (request, reply) => {
+      products.update(request.params.id, request.payload)
+        .then(reply)
+        .catch(err => {
+          if (err.name === 'EntityNotFoundError') {
+            return reply.notFound();
+          }
+
+          console.error(err);
+          reply.badImplementation();
+        });
+    },
+    config: {
+      tags: ['api'],
+      validate: {
+        params: {
+          id: Joi.string().required().description('The product identifier')
+        }
+      },
+      response: {
+        status: {
+          200: Joi.object().meta({className: 'Product'}).description('The updated product')
         }
       }
     }

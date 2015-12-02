@@ -24,7 +24,9 @@ describe('/products', () => {
       expect(postResponse.result).to.deep.equal(expectedProduct);
     });
   });
+});
 
+describe('/products/{id}', () => {
   describe('get', () => {
     let getResponse;
 
@@ -44,6 +46,41 @@ describe('/products', () => {
 
     it('returns http 404 for a product that doesn\'t exist', () =>
       specRequest({url: '/products/notexists', method: 'GET'}).then(response => expect(response.statusCode).to.equal(404))
+    );
+  });
+
+  describe('put', () => {
+    let putResponse;
+    let getResponse;
+    let expectedProduct;
+    const updatedProductParameters = Object.assign({}, productParameters, {name: 'new name'});
+
+    before(() =>
+      specRequest({url: '/products', method: 'POST', payload: productParameters})
+        .then(postResponse => specRequest({url: postResponse.headers.location, method: 'PUT', payload: updatedProductParameters}))
+        .then(response => {
+          putResponse = response;
+          expectedProduct = Object.assign({id: response.result.id, _metadata: response.result._metadata}, updatedProductParameters);
+
+          return specRequest({url: `/products/${expectedProduct.id}`, method: 'GET'}).then(response => getResponse = response);
+        })
+    );
+
+    it('returns http 200', () => {
+      expect(putResponse.statusCode).to.equal(200);
+    });
+
+    it('returns the updated product', () => {
+      expect(putResponse.result).to.deep.equal(expectedProduct);
+    });
+
+    it('persists the update', () => {
+      expect(getResponse.result).to.deep.equal(expectedProduct);
+    });
+
+    it('returns http 404 for a product that doesn\'t exist', () =>
+      specRequest({url: '/products/notexists', method: 'PUT', payload: updatedProductParameters})
+        .then(response => expect(response.statusCode).to.equal(404))
     );
   });
 });
