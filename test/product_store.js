@@ -17,6 +17,7 @@ describe('Product store', () => {
 
   let sandbox;
   let saveStub;
+  let deleteStub;
   let keySpy;
   let clock;
 
@@ -25,6 +26,7 @@ describe('Product store', () => {
     clock = sandbox.useFakeTimers(stubbedDate.getTime());
 
     saveStub = sandbox.stub(dataset, 'save', (entity, callback) => callback());
+    deleteStub = sandbox.stub(dataset, 'delete', (key, callback) => callback());
     keySpy = sandbox.spy(dataset, 'key');
 
     sandbox.stub(dataset, 'get', (key, callback) => {
@@ -122,6 +124,30 @@ describe('Product store', () => {
 
     it('throws EntityNotFoundError for unknown product', () =>
       productStore.update('notexists', updateProductParameters)
+        .then(() => {
+          throw new Error('expected EntityNotFoundError');
+        })
+        .catch(err => {
+          expect(err).to.be.an('error');
+          expect(err).to.have.property('name', 'EntityNotFoundError');
+        })
+    );
+  });
+
+  describe('delete', () => {
+    beforeEach(() => productStore.delete(existingProduct.id));
+
+    it('deletes data associated with a key containing id', () => {
+      expect(keySpy.firstCall.returnValue.path).to.deep.equal(['Product', existingProduct.id]);
+    });
+
+    it('deletes the product', () => {
+      sinon.assert.calledOnce(deleteStub);
+      sinon.assert.calledWith(deleteStub, keySpy.firstCall.returnValue);
+    });
+
+    it('throws EntityNotFoundError for unknown product', () =>
+      productStore.delete('notexists')
         .then(() => {
           throw new Error('expected EntityNotFoundError');
         })

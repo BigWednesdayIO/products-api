@@ -86,6 +86,31 @@ module.exports.register = (server, options, next) => {
     }
   });
 
+  server.route({
+    method: 'DELETE',
+    path: '/products/{id}',
+    handler: (request, reply) => {
+      products.delete(request.params.id)
+        .then(() => reply().code(204))
+        .catch(err => {
+          if (err.name === 'EntityNotFoundError') {
+            return reply.notFound();
+          }
+
+          console.error(err);
+          reply.badImplementation();
+        });
+    },
+    config: {
+      tags: ['api'],
+      validate: {
+        params: {
+          id: Joi.string().required().description('The product identifier')
+        }
+      }
+    }
+  });
+
   next();
 };
 

@@ -83,4 +83,31 @@ describe('/products/{id}', () => {
         .then(response => expect(response.statusCode).to.equal(404))
     );
   });
+
+  describe('delete', () => {
+    let deleteResponse;
+    let getResponse;
+
+    before(() =>
+      specRequest({url: '/products', method: 'POST', payload: productParameters})
+        .then(postResponse => specRequest({url: postResponse.headers.location, method: 'DELETE'}))
+        .then(response => {
+          deleteResponse = response;
+          return specRequest({url: response.request.url, method: 'GET'}).then(response => getResponse = response);
+        })
+    );
+
+    it('returns http 204', () => {
+      expect(deleteResponse.statusCode).to.equal(204);
+    });
+
+    it('removes the product', () => {
+      expect(getResponse.statusCode).to.equal(404);
+    });
+
+    it('returns http 404 for a product that doesn\'t exist', () =>
+      specRequest({url: '/products/notexists', method: 'DELETE'})
+        .then(response => expect(response.statusCode).to.equal(404))
+    );
+  });
 });
