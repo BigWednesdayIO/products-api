@@ -87,8 +87,6 @@ const formatProductTypeValidationError = (request, reply) => {
   reply(response).code(400);
 };
 
-const datastoreKey = productId => dataset.key(['Product', productId]);
-
 module.exports.register = (server, options, next) => {
   server.ext('onPreResponse', formatProductTypeValidationError);
 
@@ -96,7 +94,7 @@ module.exports.register = (server, options, next) => {
     method: 'POST',
     path: '/products',
     handler: (request, reply) => {
-      DatastoreModel.insert(datastoreKey(cuid()), request.payload)
+      DatastoreModel.insert(dataset.productKey(cuid()), request.payload)
         .then(product => reply(product).created(`/products/${product.id}`))
         .catch(err => {
           console.log(err);
@@ -121,7 +119,7 @@ module.exports.register = (server, options, next) => {
     method: 'GET',
     path: '/products/{id}',
     handler: (request, reply) => {
-      DatastoreModel.get(datastoreKey(request.params.id))
+      DatastoreModel.get(dataset.productKey(request.params.id))
         .then(reply)
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
@@ -151,7 +149,7 @@ module.exports.register = (server, options, next) => {
     method: 'PUT',
     path: '/products/{id}',
     handler: (request, reply) => {
-      DatastoreModel.update(datastoreKey(request.params.id), request.payload)
+      DatastoreModel.update(dataset.productKey(request.params.id), request.payload)
         .then(reply)
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
@@ -183,7 +181,7 @@ module.exports.register = (server, options, next) => {
     method: 'DELETE',
     path: '/products/{id}',
     handler: (request, reply) => {
-      DatastoreModel.delete(datastoreKey(request.params.id))
+      DatastoreModel.delete(dataset.productKey(request.params.id))
         .then(() => reply().code(204))
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
