@@ -263,7 +263,7 @@
     },
     "body-parser": {
       "version": "1.12.4",
-      "from": "body-parser@1.12.4",
+      "from": "https://registry.npmjs.org/body-parser/-/body-parser-1.12.4.tgz",
       "resolved": "https://registry.npmjs.org/body-parser/-/body-parser-1.12.4.tgz",
       "dependencies": {
         "iconv-lite": {
@@ -801,6 +801,33 @@
       "from": "escope@>=3.2.0 <4.0.0",
       "resolved": "https://registry.npmjs.org/escope/-/escope-3.3.0.tgz"
     },
+    "eslint": {
+      "version": "1.10.3",
+      "from": "eslint@>=1.10.2 <2.0.0",
+      "resolved": "https://registry.npmjs.org/eslint/-/eslint-1.10.3.tgz",
+      "dependencies": {
+        "espree": {
+          "version": "2.2.5",
+          "from": "espree@>=2.2.4 <3.0.0",
+          "resolved": "https://registry.npmjs.org/espree/-/espree-2.2.5.tgz"
+        },
+        "globals": {
+          "version": "8.14.0",
+          "from": "globals@>=8.11.0 <9.0.0",
+          "resolved": "https://registry.npmjs.org/globals/-/globals-8.14.0.tgz"
+        },
+        "minimatch": {
+          "version": "3.0.0",
+          "from": "minimatch@>=3.0.0 <4.0.0",
+          "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-3.0.0.tgz"
+        },
+        "user-home": {
+          "version": "2.0.0",
+          "from": "user-home@>=2.0.0 <3.0.0",
+          "resolved": "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz"
+        }
+      }
+    },
     "eslint-config-xo": {
       "version": "0.8.0",
       "from": "eslint-config-xo@>=0.8.0 <0.9.0",
@@ -1012,6 +1039,38 @@
           "version": "3.0.0",
           "from": "extend@>=3.0.0 <4.0.0",
           "resolved": "https://registry.npmjs.org/extend/-/extend-3.0.0.tgz"
+        }
+      }
+    },
+    "gcloud-datastore-model": {
+      "version": "1.0.0",
+      "from": "gcloud-datastore-model@*",
+      "resolved": "https://registry.npmjs.org/gcloud-datastore-model/-/gcloud-datastore-model-1.0.0.tgz",
+      "dependencies": {
+        "d": {
+          "version": "0.1.1",
+          "from": "d@>=0.1.1 <0.2.0",
+          "resolved": "https://registry.npmjs.org/d/-/d-0.1.1.tgz"
+        },
+        "es5-ext": {
+          "version": "0.10.9",
+          "from": "es5-ext@>=0.10.8 <0.11.0",
+          "resolved": "https://registry.npmjs.org/es5-ext/-/es5-ext-0.10.9.tgz"
+        },
+        "es6-iterator": {
+          "version": "2.0.0",
+          "from": "es6-iterator@>=2.0.0 <3.0.0",
+          "resolved": "https://registry.npmjs.org/es6-iterator/-/es6-iterator-2.0.0.tgz"
+        },
+        "es6-symbol": {
+          "version": "3.0.1",
+          "from": "es6-symbol@>=3.0.1 <3.1.0",
+          "resolved": "https://registry.npmjs.org/es6-symbol/-/es6-symbol-3.0.1.tgz"
+        },
+        "lodash": {
+          "version": "3.10.1",
+          "from": "lodash@*",
+          "resolved": "https://registry.npmjs.org/lodash/-/lodash-3.10.1.tgz"
         }
       }
     },

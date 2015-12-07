@@ -16,33 +16,56 @@ describe('/products', () => {
       expect(postResponse.statusCode).to.equal(201);
     });
 
-    it('returns the location of the created product', () => {
-      expect(postResponse.headers).to.have.property('location', `/products/${postResponse.result.id}`);
+    it('returns a generated id', () => {
+      expect(postResponse.result).has.property('id');
+      expect(postResponse.result.id).to.match(/^c.{24}$/);
+    });
+
+    it('returns created and updated dates', () => {
+      expect(postResponse.result).to.have.property('_metadata');
+      expect(postResponse.result._metadata.created).to.be.a('date');
+      expect(postResponse.result._metadata.updated).to.be.a('date');
     });
 
     it('returns the created product', () => {
-      const expectedProduct = Object.assign({id: postResponse.result.id, _metadata: postResponse.result._metadata}, productParameters);
-      expect(postResponse.result).to.deep.equal(expectedProduct);
+      expect(_.omit(postResponse.result, 'id', '_metadata')).to.deep.equal(productParameters);
+    });
+
+    it('returns the location of the created product', () => {
+      expect(postResponse.headers).to.have.property('location', `/products/${postResponse.result.id}`);
     });
   });
 });
 
 describe('/products/{id}', () => {
   describe('get', () => {
+    let createResponse;
     let getResponse;
 
     before(() =>
       specRequest({url: '/products', method: 'POST', payload: productParameters})
-        .then(postResponse => specRequest({url: postResponse.headers.location, method: 'GET'}))
+        .then(response => {
+          createResponse = response;
+          return specRequest({url: response.headers.location, method: 'GET'});
+        })
         .then(response => getResponse = response));
 
     it('returns http 200', () => {
       expect(getResponse.statusCode).to.equal(200);
     });
 
+    it('returns the id', () => {
+      expect(getResponse.result).to.have.property('id', createResponse.result.id);
+    });
+
+    it('returns created and updated dates', () => {
+      expect(getResponse.result).to.have.property('_metadata');
+      expect(getResponse.result._metadata.created).to.deep.equal(createResponse.result._metadata.created);
+      expect(getResponse.result._metadata.updated).to.deep.equal(createResponse.result._metadata.updated);
+    });
+
     it('returns the product', () => {
-      const expectedProduct = Object.assign({id: getResponse.result.id, _metadata: getResponse.result._metadata}, productParameters);
-      expect(getResponse.result).to.deep.equal(expectedProduct);
+      expect(_.omit(getResponse.result, 'id', '_metadata')).to.deep.equal(productParameters);
     });
 
     it('returns http 404 for a product that doesn\'t exist', () =>
@@ -51,19 +74,20 @@ describe('/products/{id}', () => {
   });
 
   describe('put', () => {
+    let createResponse;
     let putResponse;
     let getResponse;
-    let expectedProduct;
     const updatedProductParameters = Object.assign({}, productParameters, {name: 'new name'});
 
     before(() =>
       specRequest({url: '/products', method: 'POST', payload: productParameters})
-        .then(postResponse => specRequest({url: postResponse.headers.location, method: 'PUT', payload: updatedProductParameters}))
+        .then(response => {
+          createResponse = response;
+          return specRequest({url: response.headers.location, method: 'PUT', payload: updatedProductParameters});
+        })
         .then(response => {
           putResponse = response;
-          expectedProduct = Object.assign({id: response.result.id, _metadata: response.result._metadata}, updatedProductParameters);
-
-          return specRequest({url: `/products/${expectedProduct.id}`, method: 'GET'}).then(response => getResponse = response);
+          return specRequest({url: `/products/${response.result.id}`, method: 'GET'}).then(response => getResponse = response);
         })
     );
 
@@ -71,12 +95,22 @@ describe('/products/{id}', () => {
       expect(putResponse.statusCode).to.equal(200);
     });
 
+    it('returns the id', () => {
+      expect(putResponse.result).to.have.property('id', createResponse.result.id);
+    });
+
+    it('returns created and updated dates', () => {
+      expect(putResponse.result).to.have.property('_metadata');
+      expect(putResponse.result._metadata.created).to.deep.equal(createResponse.result._metadata.created);
+      expect(putResponse.result._metadata.updated.toISOString()).to.be.above(createResponse.result._metadata.updated.toISOString());
+    });
+
     it('returns the updated product', () => {
-      expect(putResponse.result).to.deep.equal(expectedProduct);
+      expect(_.omit(putResponse.result, 'id', '_metadata')).to.deep.equal(updatedProductParameters);
     });
 
     it('persists the update', () => {
-      expect(getResponse.result).to.deep.equal(expectedProduct);
+      expect(getResponse.result).to.deep.equal(putResponse.result);
     });
 
     it('returns http 404 for a product that doesn\'t exist', () =>

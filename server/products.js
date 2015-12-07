@@ -1,8 +1,11 @@
 'use strict';
 
+const cuid = require('cuid');
 const Joi = require('joi');
 
-const products = require('../lib/product_store');
+const dataset = require('../lib/dataset');
+const DatastoreModel = require('gcloud-datastore-model')(dataset);
+
 const productTypes = [
   {
     name: 'test_product',
@@ -30,7 +33,8 @@ const requestSchema = Joi.object(baseAttributes).meta({className: 'ProductParame
 const responseSchema = Joi.object(Object.assign({
   id: Joi.string().required().description('Product identifier'),
   _metadata: Joi.object({
-    created: Joi.date().required().description('Date the product was created')
+    created: Joi.date().required().description('Date the product was created'),
+    updated: Joi.date().required().description('Date the product was updated')
   }).meta({className: 'ProductMetaData'})
 }, baseAttributes)).meta({className: 'Product'});
 
@@ -83,6 +87,8 @@ const formatProductTypeValidationError = (request, reply) => {
   reply(response).code(400);
 };
 
+const datastoreKey = productId => dataset.key(['Product', productId]);
+
 module.exports.register = (server, options, next) => {
   server.ext('onPreResponse', formatProductTypeValidationError);
 
@@ -90,7 +96,7 @@ module.exports.register = (server, options, next) => {
     method: 'POST',
     path: '/products',
     handler: (request, reply) => {
-      products.create(request.payload)
+      DatastoreModel.insert(datastoreKey(cuid()), request.payload)
         .then(product => reply(product).created(`/products/${product.id}`))
         .catch(err => {
           console.log(err);
@@ -115,7 +121,7 @@ module.exports.register = (server, options, next) => {
     method: 'GET',
     path: '/products/{id}',
     handler: (request, reply) => {
-      products.get(request.params.id)
+      DatastoreModel.get(datastoreKey(request.params.id))
         .then(reply)
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
@@ -145,7 +151,7 @@ module.exports.register = (server, options, next) => {
     method: 'PUT',
     path: '/products/{id}',
     handler: (request, reply) => {
-      products.update(request.params.id, request.payload)
+      DatastoreModel.update(datastoreKey(request.params.id), request.payload)
         .then(reply)
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
@@ -177,7 +183,7 @@ module.exports.register = (server, options, next) => {
     method: 'DELETE',
     path: '/products/{id}',
     handler: (request, reply) => {
-      products.delete(request.params.id)
+      DatastoreModel.delete(datastoreKey(request.params.id))
         .then(() => reply().code(204))
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
