@@ -58,12 +58,7 @@ describe('/products', () => {
     it('returns the products', () => {
       expect(getResponse.result).to.be.an('array');
       expect(getResponse.result).to.have.length(3);
-    });
-
-    it('returns the products', () => {
-      getResponse.result.forEach((product, index) => {
-        expect(product).to.deep.equal(createResponses[index].result);
-      });
+      expect(getResponse.result).to.deep.equal(createResponses.slice(0, 3).map(r => r.result));
     });
 
     it('returns an empty array when none of the requested products are found', () =>
