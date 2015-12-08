@@ -64,7 +64,7 @@ const validateProductType = (request, reply) => {
 
   if (additionalAttributes.length || validationErrors.length || missingAttributes.length) {
     return reply.badRequest(
-      'child "product_type_attributes" fails because ["product_type_attributes" are not valid for product_type "test_product"]',
+      `child "product_type_attributes" fails because ["product_type_attributes" are not valid for product_type "${request.payload.product_type}"]`,
       {
         product_type_validation_error: true,
         forbidden_product_type_attributes: additionalAttributes,
