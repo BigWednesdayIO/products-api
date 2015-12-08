@@ -118,6 +118,34 @@ module.exports.register = (server, options, next) => {
 
   server.route({
     method: 'GET',
+    path: '/products',
+    handler: (request, reply) => {
+      const keys = request.query.id.map(id => datasetEntities.productKey(id));
+
+      DatastoreModel.getMany(keys)
+        .then(reply)
+        .catch(err => {
+          console.log(err);
+          reply.badImplementation();
+        });
+    },
+    config: {
+      tags: ['api'],
+      validate: {
+        query: {
+          id: Joi.array().required().items(Joi.string()).description('Identifiers of products to return')
+        }
+      },
+      response: {
+        status: {
+          200: Joi.array().items(responseSchema).description('An array of products')
+        }
+      }
+    }
+  });
+
+  server.route({
+    method: 'GET',
     path: '/products/{id}',
     handler: (request, reply) => {
       DatastoreModel.get(datasetEntities.productKey(request.params.id))

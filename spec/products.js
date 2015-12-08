@@ -35,6 +35,63 @@ describe('/products', () => {
       expect(postResponse.headers).to.have.property('location', `/products/${postResponse.result.id}`);
     });
   });
+
+  describe('get', () => {
+    let getResponse;
+    let createResponses;
+
+    before(() =>
+      Promise.all([
+        specRequest({url: '/products', method: 'POST', payload: _.assign({}, productParameters, {name: 'one'})}),
+        specRequest({url: '/products', method: 'POST', payload: _.assign({}, productParameters, {name: 'two'})}),
+        specRequest({url: '/products', method: 'POST', payload: _.assign({}, productParameters, {name: 'three'})}),
+        specRequest({url: '/products', method: 'POST', payload: _.assign({}, productParameters, {name: 'four'})})
+      ])
+      .then(responses => createResponses = responses)
+      .then(() => specRequest({url: `/products?id[]=${createResponses.slice(0, 3).map(r => r.result.id).join('&id[]=')}`, method: 'GET'}))
+      .then(response => getResponse = response));
+
+    it('returns http 200', () => {
+      expect(getResponse.statusCode).to.equal(200);
+    });
+
+    it('returns the products', () => {
+      expect(getResponse.result).to.be.an('array');
+      expect(getResponse.result).to.have.length(3);
+    });
+
+    it('returns the products', () => {
+      getResponse.result.forEach((product, index) => {
+        expect(product).to.deep.equal(createResponses[index].result);
+      });
+    });
+
+    it('returns an empty array when none of the requested products are found', () =>
+      specRequest({url: '/products?id[]=1&id[]=2&id[]=3', method: 'GET'})
+        .then(response => expect(response.result).to.have.length(0)));
+
+    // we may want to introduce a general GET all method, but for now not required so make ids filter required
+    it('rejects with http 400 when id filter is not provided', () =>
+      specRequest({url: '/products', method: 'GET'})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result).to.have.property('message', 'child "id" fails because ["id" is required]');
+        }));
+
+    it('rejects with http 400 when id filter is not an array', () =>
+      specRequest({url: '/products?id=1', method: 'GET'})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result).to.have.property('message', 'child "id" fails because ["id" must be an array]');
+        }));
+
+    it('rejects with http 400 when id array contains a non-string value', () =>
+      specRequest({url: '/products?id[]=123&id[]=', method: 'GET'})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result).to.have.property('message', 'child "id" fails because ["id" at position 1 fails because ["1" is not allowed to be empty]]');
+        }));
+  });
 });
 
 describe('/products/{id}', () => {
