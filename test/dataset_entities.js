@@ -1,14 +1,14 @@
 'use strict';
 
 const expect = require('chai').expect;
-const dataset = require('../lib/dataset');
+const datasetEntities = require('../lib/dataset_entities');
 
-describe('Dataset', () => {
+describe('Dataset entities', () => {
   describe('product key', () => {
     let key;
 
     before(() => {
-      key = dataset.productKey('myid123');
+      key = datasetEntities.productKey('myid123');
     });
 
     it('creates a key containing the product kind', () => {
@@ -20,7 +20,7 @@ describe('Dataset', () => {
     });
 
     it('errors when product id is not provided', () => {
-      expect(() => dataset.productKey()).to.throw(Error, /Missing product identifier/);
+      expect(() => datasetEntities.productKey()).to.throw(Error, /Missing product identifier/);
     });
   });
 });

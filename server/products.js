@@ -4,6 +4,7 @@ const cuid = require('cuid');
 const Joi = require('joi');
 
 const dataset = require('../lib/dataset');
+const datasetEntities = require('../lib/dataset_entities');
 const DatastoreModel = require('gcloud-datastore-model')(dataset);
 
 const productTypes = [
@@ -94,7 +95,7 @@ module.exports.register = (server, options, next) => {
     method: 'POST',
     path: '/products',
     handler: (request, reply) => {
-      DatastoreModel.insert(dataset.productKey(cuid()), request.payload)
+      DatastoreModel.insert(datasetEntities.productKey(cuid()), request.payload)
         .then(product => reply(product).created(`/products/${product.id}`))
         .catch(err => {
           console.log(err);
@@ -119,7 +120,7 @@ module.exports.register = (server, options, next) => {
     method: 'GET',
     path: '/products/{id}',
     handler: (request, reply) => {
-      DatastoreModel.get(dataset.productKey(request.params.id))
+      DatastoreModel.get(datasetEntities.productKey(request.params.id))
         .then(reply)
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
@@ -149,7 +150,7 @@ module.exports.register = (server, options, next) => {
     method: 'PUT',
     path: '/products/{id}',
     handler: (request, reply) => {
-      DatastoreModel.update(dataset.productKey(request.params.id), request.payload)
+      DatastoreModel.update(datasetEntities.productKey(request.params.id), request.payload)
         .then(reply)
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
@@ -181,7 +182,7 @@ module.exports.register = (server, options, next) => {
     method: 'DELETE',
     path: '/products/{id}',
     handler: (request, reply) => {
-      DatastoreModel.delete(dataset.productKey(request.params.id))
+      DatastoreModel.delete(datasetEntities.productKey(request.params.id))
         .then(() => reply().code(204))
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
