@@ -133,7 +133,7 @@ module.exports.register = (server, options, next) => {
       tags: ['api'],
       validate: {
         query: {
-          id: Joi.array().required().items(Joi.string()).description('Identifiers of products to return')
+          id: Joi.array().required().items(Joi.string()).max(50).description('Identifiers of products to return')
         }
       },
       response: {

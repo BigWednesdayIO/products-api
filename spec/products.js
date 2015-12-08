@@ -91,6 +91,13 @@ describe('/products', () => {
           expect(response.statusCode).to.equal(400);
           expect(response.result).to.have.property('message', 'child "id" fails because ["id" at position 1 fails because ["1" is not allowed to be empty]]');
         }));
+
+    it('rejects with http 400 when more than 50 ids are requested', () =>
+      specRequest({url: `/products?id[]=${Array.from(Array(51).keys()).join('&id[]=')}`})
+        .then(response => {
+          expect(response.statusCode).to.equal(400);
+          expect(response.result).to.have.property('message', 'child "id" fails because ["id" must contain less than or equal to 50 items]');
+        }));
   });
 });
 
