@@ -31,6 +31,10 @@
               {
                 "name": "GCLOUD_KEY",
                 "value": "{{GCLOUD_KEY}}"
+              },
+              {
+                "name": "JWT_SECRET",
+                "value": "{{JWT_SECRET}}"
               }
             ],
             "ports": [
