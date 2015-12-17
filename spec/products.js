@@ -2,15 +2,22 @@
 
 const _ = require('lodash');
 const expect = require('chai').expect;
+const jsonwebtoken = require('jsonwebtoken');
 const specRequest = require('./spec_request');
 const productParameters = require('./parameters/product');
+
+const authToken = options =>
+  jsonwebtoken.sign(
+    {},
+    new Buffer(process.env.JWT_SECRET, 'base64'),
+    Object.assign({algorithm: 'HS256'}, options));
 
 describe('/products', () => {
   describe('post', () => {
     let postResponse;
 
     before(() =>
-      specRequest({url: '/products', method: 'POST', payload: productParameters}).then(response => postResponse = response));
+      specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: productParameters}).then(response => postResponse = response));
 
     it('returns http 201', () => {
       expect(postResponse.statusCode).to.equal(201);
@@ -42,13 +49,13 @@ describe('/products', () => {
 
     before(() =>
       Promise.all([
-        specRequest({url: '/products', method: 'POST', payload: _.assign({}, productParameters, {name: 'one'})}),
-        specRequest({url: '/products', method: 'POST', payload: _.assign({}, productParameters, {name: 'two'})}),
-        specRequest({url: '/products', method: 'POST', payload: _.assign({}, productParameters, {name: 'three'})}),
-        specRequest({url: '/products', method: 'POST', payload: _.assign({}, productParameters, {name: 'four'})})
+        specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: _.assign({}, productParameters, {name: 'one'})}),
+        specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: _.assign({}, productParameters, {name: 'two'})}),
+        specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: _.assign({}, productParameters, {name: 'three'})}),
+        specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: _.assign({}, productParameters, {name: 'four'})})
       ])
       .then(responses => createResponses = responses)
-      .then(() => specRequest({url: `/products?id[]=${createResponses.slice(0, 3).map(r => r.result.id).join('&id[]=')}`, method: 'GET'}))
+      .then(() => specRequest({url: `/products?id[]=${createResponses.slice(0, 3).map(r => r.result.id).join('&id[]=')}`, method: 'GET', headers: {authorization: authToken()}}))
       .then(response => getResponse = response));
 
     it('returns http 200', () => {
@@ -62,33 +69,33 @@ describe('/products', () => {
     });
 
     it('returns an empty array when none of the requested products are found', () =>
-      specRequest({url: '/products?id[]=1&id[]=2&id[]=3', method: 'GET'})
+      specRequest({url: '/products?id[]=1&id[]=2&id[]=3', method: 'GET', headers: {authorization: authToken()}})
         .then(response => expect(response.result).to.have.length(0)));
 
     // we may want to introduce a general GET all method, but for now not required so make ids filter required
     it('rejects with http 400 when id filter is not provided', () =>
-      specRequest({url: '/products', method: 'GET'})
+      specRequest({url: '/products', method: 'GET', headers: {authorization: authToken()}})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result).to.have.property('message', 'child "id" fails because ["id" is required]');
         }));
 
     it('rejects with http 400 when id filter is not an array', () =>
-      specRequest({url: '/products?id=1', method: 'GET'})
+      specRequest({url: '/products?id=1', method: 'GET', headers: {authorization: authToken()}})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result).to.have.property('message', 'child "id" fails because ["id" must be an array]');
         }));
 
     it('rejects with http 400 when id array contains a non-string value', () =>
-      specRequest({url: '/products?id[]=123&id[]=', method: 'GET'})
+      specRequest({url: '/products?id[]=123&id[]=', method: 'GET', headers: {authorization: authToken()}})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result).to.have.property('message', 'child "id" fails because ["id" at position 1 fails because ["1" is not allowed to be empty]]');
         }));
 
     it('rejects with http 400 when more than 50 ids are requested', () =>
-      specRequest({url: `/products?id[]=${Array.from(Array(51).keys()).join('&id[]=')}`})
+      specRequest({url: `/products?id[]=${Array.from(Array(51).keys()).join('&id[]=')}`, headers: {authorization: authToken()}})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result).to.have.property('message', 'child "id" fails because ["id" must contain less than or equal to 50 items]');
@@ -102,10 +109,10 @@ describe('/products/{id}', () => {
     let getResponse;
 
     before(() =>
-      specRequest({url: '/products', method: 'POST', payload: productParameters})
+      specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: productParameters})
         .then(response => {
           createResponse = response;
-          return specRequest({url: response.headers.location, method: 'GET'});
+          return specRequest({url: response.headers.location, method: 'GET', headers: {authorization: authToken()}});
         })
         .then(response => getResponse = response));
 
@@ -128,7 +135,7 @@ describe('/products/{id}', () => {
     });
 
     it('returns http 404 for a product that doesn\'t exist', () =>
-      specRequest({url: '/products/notexists', method: 'GET'}).then(response => expect(response.statusCode).to.equal(404))
+      specRequest({url: '/products/notexists', method: 'GET', headers: {authorization: authToken()}}).then(response => expect(response.statusCode).to.equal(404))
     );
   });
 
@@ -139,14 +146,14 @@ describe('/products/{id}', () => {
     const updatedProductParameters = Object.assign({}, productParameters, {name: 'new name'});
 
     before(() =>
-      specRequest({url: '/products', method: 'POST', payload: productParameters})
+      specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: productParameters})
         .then(response => {
           createResponse = response;
-          return specRequest({url: response.headers.location, method: 'PUT', payload: updatedProductParameters});
+          return specRequest({url: response.headers.location, method: 'PUT', headers: {authorization: authToken()}, payload: updatedProductParameters});
         })
         .then(response => {
           putResponse = response;
-          return specRequest({url: `/products/${response.result.id}`, method: 'GET'}).then(response => getResponse = response);
+          return specRequest({url: `/products/${response.result.id}`, headers: {authorization: authToken()}, method: 'GET'}).then(response => getResponse = response);
         })
     );
 
@@ -173,7 +180,7 @@ describe('/products/{id}', () => {
     });
 
     it('returns http 404 for a product that doesn\'t exist', () =>
-      specRequest({url: '/products/notexists', method: 'PUT', payload: updatedProductParameters})
+      specRequest({url: '/products/notexists', method: 'PUT', headers: {authorization: authToken()}, payload: updatedProductParameters})
         .then(response => expect(response.statusCode).to.equal(404))
     );
   });
@@ -183,11 +190,11 @@ describe('/products/{id}', () => {
     let getResponse;
 
     before(() =>
-      specRequest({url: '/products', method: 'POST', payload: productParameters})
-        .then(postResponse => specRequest({url: postResponse.headers.location, method: 'DELETE'}))
+      specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: productParameters})
+        .then(postResponse => specRequest({url: postResponse.headers.location, method: 'DELETE', headers: {authorization: authToken()}}))
         .then(response => {
           deleteResponse = response;
-          return specRequest({url: response.request.url, method: 'GET'}).then(response => getResponse = response);
+          return specRequest({url: response.request.url, method: 'GET', headers: {authorization: authToken()}}).then(response => getResponse = response);
         })
     );
 
@@ -200,7 +207,7 @@ describe('/products/{id}', () => {
     });
 
     it('returns http 404 for a product that doesn\'t exist', () =>
-      specRequest({url: '/products/notexists', method: 'DELETE'})
+      specRequest({url: '/products/notexists', method: 'DELETE', headers: {authorization: authToken()}})
         .then(response => expect(response.statusCode).to.equal(404))
     );
   });
@@ -220,7 +227,7 @@ describe('payload validation', () => {
   [{method: 'POST', url: '/products'}, {method: 'PUT', url: '/products/1'}].forEach(request => {
     attributes.filter(a => a.required).forEach(attribute => {
       it(`requires ${attribute.name} for ${request.method} request`, () =>
-        specRequest({url: request.url, method: request.method, payload: _.omit(productParameters, attribute.name)})
+        specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: _.omit(productParameters, attribute.name)})
           .then(response => {
             expect(response.statusCode).to.equal(400);
             expect(response.result.message).to.equal(`child "${attribute.name}" fails because ["${attribute.name}" is required]`);
@@ -230,7 +237,7 @@ describe('payload validation', () => {
 
     attributes.filter(a => a.type === 'string').forEach(attribute => {
       it(`rejects non-string ${attribute.name} values for ${request.method} request`, () =>
-        specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {[attribute.name]: 1})})
+        specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {[attribute.name]: 1})})
           .then(response => {
             expect(response.statusCode).to.equal(400);
             expect(response.result.message).to.equal(`child "${attribute.name}" fails because ["${attribute.name}" must be a string]`);
@@ -239,7 +246,7 @@ describe('payload validation', () => {
     });
 
     it(`rejects unknown product_type values for ${request.method} request`, () =>
-      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type: '123'})})
+      specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {product_type: '123'})})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result.message).to.match(/^child "product_type" fails because \["product_type" must be one of \[.*\]\]$/);
@@ -247,7 +254,7 @@ describe('payload validation', () => {
     );
 
     it(`validates that product_type_attributes have names for ${request.method}`, () =>
-      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type_attributes: [{values: []}]})})
+      specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {product_type_attributes: [{values: []}]})})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" at position 0 fails because [child "name" fails because ["name" is required]]]');
@@ -255,7 +262,7 @@ describe('payload validation', () => {
     );
 
     it(`validates that product_type_attributes name is a string for ${request.method}`, () =>
-      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 1, values: []}]})})
+      specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 1, values: []}]})})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" at position 0 fails because [child "name" fails because ["name" must be a string]]]');
@@ -263,7 +270,7 @@ describe('payload validation', () => {
     );
 
     it(`validates that product_type_attributes have values for ${request.method}`, () =>
-      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 'test_attribute'}]})})
+      specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 'test_attribute'}]})})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" at position 0 fails because [child "values" fails because ["values" is required]]]');
@@ -271,7 +278,7 @@ describe('payload validation', () => {
     );
 
     it(`validates that product_type_attributes values is an array for ${request.method}`, () =>
-      specRequest({url: request.url, method: request.method, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 'test_attribute', values: 1}]})})
+      specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {product_type_attributes: [{name: 'test_attribute', values: 1}]})})
         .then(response => {
           expect(response.statusCode).to.equal(400);
           expect(response.result.message).to.equal('child "product_type_attributes" fails because ["product_type_attributes" at position 0 fails because [child "values" fails because ["values" must be an array]]]');
@@ -282,6 +289,7 @@ describe('payload validation', () => {
       specRequest({
         url: request.url,
         method: request.method,
+        headers: {authorization: authToken()},
         payload: Object.assign({}, productParameters, {product_type_attributes: []}
       )}).then(response => {
         expect(response.statusCode).to.equal(400);
@@ -295,6 +303,7 @@ describe('payload validation', () => {
       specRequest({
         url: request.url,
         method: request.method,
+        headers: {authorization: authToken()},
         payload: Object.assign({},
           productParameters,
           {product_type_attributes: [{name: 'test_attribute', values: []}, {name: 'extra_attribute1', values: []}, {name: 'extra_attribute2', values: []}]}
@@ -310,6 +319,7 @@ describe('payload validation', () => {
       specRequest({
         url: request.url,
         method: request.method,
+        headers: {authorization: authToken()},
         payload: Object.assign({},
           productParameters,
           {product_type_attributes: [{name: 'test_attribute', values: ['1', 2]}]}
@@ -320,5 +330,35 @@ describe('payload validation', () => {
         expect(response.result.invalid_product_type_attributes).to.deep.equal(['"test_attribute" values fails because ["value" at position 1 fails because ["1" must be a string]]']);
       })
     );
+  });
+
+  describe('authorization', () => {
+    require('../server')((err, server) => {
+      if (err) {
+        throw new Error(err);
+      }
+
+      server.table()[0].table
+        .filter(route => route.path.indexOf('/products') === 0)
+        .forEach(route => {
+          it(`requires auth token for ${route.method} ${route.path}`, () =>
+            specRequest({url: route.path, method: route.method})
+              .then(response => expect(response.statusCode).to.equal(401)));
+
+          it(`requires an unexpired auth token for ${route.method} ${route.path}`, () =>
+            specRequest({url: route.path, method: route.method, headers: {authorization: authToken({expiresIn: '0'})}})
+              .then(response => {
+                expect(response.statusCode).to.equal(401);
+                expect(response.result).to.have.property('message', 'Token expired');
+              }));
+
+          it(`requires auth token with HS256 algorithm for ${route.method} ${route.path}`, () =>
+            specRequest({url: route.path, method: route.method, headers: {authorization: authToken({algorithm: 'HS512'})}})
+              .then(response => {
+                expect(response.statusCode).to.equal(401);
+                expect(response.result).to.have.property('message', 'Invalid token');
+              }));
+        });
+    });
   });
 });

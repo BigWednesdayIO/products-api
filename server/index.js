@@ -4,7 +4,10 @@ const hapi = require('hapi');
 const errorSchemas = require('hapi-error-schemas');
 
 const basePlugins = [{
-  register: require('hapi-version-route')
+  register: require('./jwt_auth_strategy')
+}, {
+  register: require('hapi-version-route'),
+  options: {auth: false}
 }, {
   register: require('hapi-boom-decorators')
 }, {
