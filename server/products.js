@@ -5,7 +5,11 @@ const Joi = require('joi');
 
 const dataset = require('../lib/dataset');
 const datasetEntities = require('../lib/dataset_entities');
+const indexer = require('../lib/indexer');
+
 const DatastoreModel = require('gcloud-datastore-model')(dataset);
+
+indexer(DatastoreModel);
 
 const productTypes = [
   {

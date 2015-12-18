@@ -401,6 +401,11 @@
       "from": "center-align@>=0.1.1 <0.2.0",
       "resolved": "https://registry.npmjs.org/center-align/-/center-align-0.1.2.tgz"
     },
+    "chai": {
+      "version": "3.4.1",
+      "from": "chai@>=3.4.1 <4.0.0",
+      "resolved": "https://registry.npmjs.org/chai/-/chai-3.4.1.tgz"
+    },
     "chalk": {
       "version": "1.1.1",
       "from": "chalk@>=1.0.0 <2.0.0",
@@ -1055,9 +1060,9 @@
       }
     },
     "gcloud-datastore-model": {
-      "version": "1.0.0",
-      "from": "gcloud-datastore-model@*",
-      "resolved": "https://registry.npmjs.org/gcloud-datastore-model/-/gcloud-datastore-model-1.0.0.tgz",
+      "version": "1.2.0",
+      "from": "gcloud-datastore-model@>=1.2.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/gcloud-datastore-model/-/gcloud-datastore-model-1.2.0.tgz",
       "dependencies": {
         "d": {
           "version": "0.1.1",
@@ -2872,6 +2877,11 @@
       "version": "1.0.0",
       "from": "prop-assign@>=1.0.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/prop-assign/-/prop-assign-1.0.0.tgz"
+    },
+    "propagate": {
+      "version": "0.3.1",
+      "from": "propagate@>=0.3.0 <0.4.0",
+      "resolved": "https://registry.npmjs.org/propagate/-/propagate-0.3.1.tgz"
     },
     "propprop": {
       "version": "0.3.0",
