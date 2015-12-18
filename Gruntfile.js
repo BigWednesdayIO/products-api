@@ -30,7 +30,9 @@ module.exports = function (grunt) {
     env: {
       test: {
         RESPONSE_FAIL_ACTION: 'error',
-        JWT_SECRET: '1111111111111'
+        JWT_SECRET: '1111111111111',
+        ORDERABLE_SEARCH_API_SVC_SERVICE_HOST: 'localhost',
+        ORDERABLE_SEARCH_API_SVC_SERVICE_PORT: 9999
       }
     },
     watch: {
