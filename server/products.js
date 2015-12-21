@@ -1,11 +1,13 @@
 'use strict';
 
+const _ = require('lodash');
 const cuid = require('cuid');
 const Joi = require('joi');
 
 const dataset = require('../lib/dataset');
 const datasetEntities = require('../lib/dataset_entities');
 const indexer = require('../lib/indexer');
+const productMapper = require('../lib/product_mapper');
 
 const DatastoreModel = require('gcloud-datastore-model')(dataset);
 
@@ -23,7 +25,6 @@ const productTypes = [
 const baseAttributes = {
   name: Joi.string().required().description('Product name'),
   brand: Joi.string().required().description('Brand'),
-  category_id: Joi.string().required().description('Category'),
   description: Joi.string().description('Description'),
   short_description: Joi.string().description('Short description'),
   product_type: Joi.string().valid(productTypes.map(t => t.name)).required().description('Product type'),
@@ -33,10 +34,14 @@ const baseAttributes = {
   }).meta({className: 'ProductTypeAttribute'})).required().description('Additional attributes associated with the product type')
 };
 
-const requestSchema = Joi.object(baseAttributes).meta({className: 'ProductParameters'});
+const requestSchema = Joi.object(Object.assign({
+  category_id: Joi.string().required().description('Identifier of the category to which the product belongs')
+}, baseAttributes)).meta({className: 'ProductParameters'});
 
 const responseSchema = Joi.object(Object.assign({
   id: Joi.string().required().description('Product identifier'),
+  category_id: Joi.string().when('category', {is: null, then: Joi.required()}).description('Identifier of the category to which the product belongs'),
+  category: Joi.object().meta({className: 'Category'}).description('The expanded category resource'),
   _metadata: Joi.object({
     created: Joi.date().required().description('Date the product was created'),
     updated: Joi.date().required().description('Date the product was updated')
@@ -153,6 +158,7 @@ module.exports.register = (server, options, next) => {
     path: '/products/{id}',
     handler: (request, reply) => {
       DatastoreModel.get(datasetEntities.productKey(request.params.id))
+        .then(_.partialRight(productMapper.toModel, request.query.expand))
         .then(reply)
         .catch(err => {
           if (err.name === 'EntityNotFoundError') {
@@ -168,6 +174,9 @@ module.exports.register = (server, options, next) => {
       validate: {
         params: {
           id: Joi.string().required().description('The product identifier')
+        },
+        query: {
+          expand: Joi.array().items(Joi.string()).description('Associated resources to expand')
         }
       },
       response: {

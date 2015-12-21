@@ -1,3 +1,6 @@
 [submodule "gcloud_scripts"]
 	path = gcloud_scripts
 	url = git@github.com:BigWednesdayIO/kubernetes-deployment-scripts.git
+[submodule "lib/categories-api"]
+	path = lib/categories-api
+	url = git@github.com:BigWednesdayIO/categories-api.git

@@ -135,8 +135,22 @@ describe('/products/{id}', () => {
     });
 
     it('returns http 404 for a product that doesn\'t exist', () =>
-      specRequest({url: '/products/notexists', method: 'GET', headers: {authorization: authToken()}}).then(response => expect(response.statusCode).to.equal(404))
-    );
+      specRequest({url: '/products/notexists', method: 'GET', headers: {authorization: authToken()}}).then(response => expect(response.statusCode).to.equal(404)));
+
+    it('expands category resource', () =>
+      specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: productParameters})
+        .then(response => specRequest({url: `${response.headers.location}?expand[]=category`, headers: {authorization: authToken()}, method: 'GET'}))
+        .then(response => {
+          expect(response.result).to.have.property('category');
+          expect(response.result).to.not.have.property('category_id');
+
+          expect(response.result.category).to.deep.equal({
+            id: '2628',
+            name: 'Fizzy Drinks',
+            _metadata: {
+              hierarchy: ['412', '412.413', '412.413.2628']
+            }});
+        }));
   });
 
   describe('put', () => {

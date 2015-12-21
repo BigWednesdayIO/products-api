@@ -4,7 +4,7 @@ module.exports = {
   name: 'a product',
   product_type: 'test_product',
   brand: 'coca cola',
-  category_id: '3',
+  category_id: '2628',
   description: 'this is a really really really nice product',
   short_description: 'this is a nice product',
   product_type_attributes: [

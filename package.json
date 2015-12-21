@@ -36,6 +36,7 @@
     "load-grunt-tasks": "^3.3.0",
     "mocha": "^2.3.4",
     "nock": "^3.5.0",
+    "proxyquire": "^1.7.3",
     "sinon": "^1.17.2",
     "swagger-tools": "^0.9.9"
   },
