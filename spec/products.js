@@ -218,7 +218,7 @@ describe('payload validation', () => {
     {name: 'name', type: 'string', required: true},
     {name: 'product_type', type: 'string', required: true},
     {name: 'brand', type: 'string', required: true},
-    {name: 'category', type: 'string', required: true},
+    {name: 'category_id', type: 'string', required: true},
     {name: 'short_description', type: 'string'},
     {name: 'description', type: 'string'},
     {name: 'product_type_attributes', type: 'array', required: true}

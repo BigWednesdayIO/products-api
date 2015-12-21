@@ -23,7 +23,7 @@ const productTypes = [
 const baseAttributes = {
   name: Joi.string().required().description('Product name'),
   brand: Joi.string().required().description('Brand'),
-  category: Joi.string().required().description('Category'),
+  category_id: Joi.string().required().description('Category'),
   description: Joi.string().description('Description'),
   short_description: Joi.string().description('Short description'),
   product_type: Joi.string().valid(productTypes.map(t => t.name)).required().description('Product type'),
