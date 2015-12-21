@@ -10,6 +10,8 @@ const expect = require('chai').expect;
 const productModel = new events.EventEmitter();
 const indexingApi = `http://${process.env.ORDERABLE_SEARCH_API_SVC_SERVICE_HOST}:${process.env.ORDERABLE_SEARCH_API_SVC_SERVICE_PORT}`;
 
+const productMapper = require('../lib/product_mapper');
+
 require('../lib/indexer')(productModel);
 
 describe('Indexer', () => {
@@ -17,15 +19,26 @@ describe('Indexer', () => {
     let indexingRequest;
     let indexingRequestBody;
     let consoleErrorSpy;
-    const model = {id: 'p1', name: 'a product', brand: 'a brand', category: '123'};
+    let sandbox;
+    const model = {id: 'p1', name: 'a product', brand: 'a brand', category_id: '123'};
     const emitEvent = () => productModel.emit('updated', model);
 
     beforeEach(done => {
+      sandbox = sinon.sandbox.create();
+
       indexingRequest = nock(indexingApi)
         .post('/indexing_jobs')
         .reply(202, (uri, body) => indexingRequestBody = JSON.parse(body));
 
-      consoleErrorSpy = sinon.spy(console, 'error');
+      consoleErrorSpy = sandbox.spy(console, 'error');
+
+      sandbox.stub(productMapper, 'toModel', (product, expansions) => {
+        if (expansions.indexOf('category') < 0) {
+          return product;
+        }
+
+        return Object.assign(_.omit(product, 'category_id'), {category: {}});
+      });
 
       emitEvent();
       setImmediate(done);
@@ -33,7 +46,7 @@ describe('Indexer', () => {
 
     afterEach(() => {
       nock.cleanAll();
-      consoleErrorSpy.restore();
+      sandbox.restore();
     });
 
     it('makes an indexing request', () => {
@@ -52,8 +65,13 @@ describe('Indexer', () => {
       expect(indexingRequestBody).to.have.property('data');
     });
 
+    it('includes expanded category in data', () => {
+      expect(indexingRequestBody.data).to.have.property('category');
+      expect(indexingRequestBody.data).to.not.have.property('category_id');
+    });
+
     it('includes model attributes in data', () => {
-      _.forOwn(model, (value, key) => {
+      _.forOwn(_.omit(model, 'category_id'), (value, key) => {
         expect(indexingRequestBody.data).to.have.property(key, value);
       });
     });
