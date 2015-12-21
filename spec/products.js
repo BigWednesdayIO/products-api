@@ -47,7 +47,7 @@ describe('/products', () => {
     let getResponse;
     let createResponses;
 
-    before(() =>
+    beforeEach(() =>
       Promise.all([
         specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: _.assign({}, productParameters, {name: 'one'})}),
         specRequest({url: '/products', method: 'POST', headers: {authorization: authToken()}, payload: _.assign({}, productParameters, {name: 'two'})}),
@@ -71,6 +71,23 @@ describe('/products', () => {
     it('returns an empty array when none of the requested products are found', () =>
       specRequest({url: '/products?id[]=1&id[]=2&id[]=3', method: 'GET', headers: {authorization: authToken()}})
         .then(response => expect(response.result).to.have.length(0)));
+
+    it('returns the expanded category resources', () =>
+      specRequest({
+        url: `/products?expand[]=category&id[]=${createResponses.slice(0, 3).map(r => r.result.id).join('&id[]=')}`,
+        method: 'GET',
+        headers: {authorization: authToken()}
+      }).then(response => {
+        response.result.forEach(product => {
+          expect(product).to.not.have.property('category_id');
+          expect(product.category).to.deep.equal({
+            id: '2628',
+            name: 'Fizzy Drinks',
+            _metadata: {
+              hierarchy: ['412', '412.413', '412.413.2628']
+            }});
+        });
+      }));
 
     // we may want to introduce a general GET all method, but for now not required so make ids filter required
     it('rejects with http 400 when id filter is not provided', () =>

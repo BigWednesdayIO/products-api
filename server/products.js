@@ -132,6 +132,7 @@ module.exports.register = (server, options, next) => {
       const keys = request.query.id.map(id => datasetEntities.productKey(id));
 
       DatastoreModel.getMany(keys)
+        .then(_.partialRight(productMapper.toModelArray, request.query.expand))
         .then(reply)
         .catch(err => {
           console.log(err);
@@ -142,7 +143,8 @@ module.exports.register = (server, options, next) => {
       tags: ['api'],
       validate: {
         query: {
-          id: Joi.array().required().items(Joi.string()).max(50).description('Identifiers of products to return')
+          id: Joi.array().required().items(Joi.string()).max(50).description('Identifiers of products to return'),
+          expand: Joi.array().items(Joi.string()).description('Associated resources to expand')
         }
       },
       response: {
