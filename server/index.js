@@ -27,7 +27,6 @@ module.exports = callback => {
   const server = new hapi.Server({
     connections: {
       routes: {
-        auth: false,
         response: {
           failAction: process.env.RESPONSE_FAIL_ACTION || 'log',
           status: errorSchemas.statuses()

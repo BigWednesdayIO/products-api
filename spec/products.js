@@ -363,7 +363,7 @@ describe('payload validation', () => {
     );
   });
 
-  describe.skip('authorization', () => {
+  describe('authorization', () => {
     require('../server')((err, server) => {
       if (err) {
         throw new Error(err);
