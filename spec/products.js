@@ -81,10 +81,10 @@ describe('/products', () => {
         response.result.forEach(product => {
           expect(product).to.not.have.property('category_id');
           expect(product.category).to.deep.equal({
-            id: '2628',
-            name: 'Fizzy Drinks',
+            id: '6572',
+            name: 'Avocados',
             _metadata: {
-              hierarchy: ['412', '412.413', '412.413.2628']
+              hierarchy: ['422', '422.5793', '422.5793.6572']
             }});
         });
       }));
@@ -162,10 +162,10 @@ describe('/products/{id}', () => {
           expect(response.result).to.not.have.property('category_id');
 
           expect(response.result.category).to.deep.equal({
-            id: '2628',
-            name: 'Fizzy Drinks',
+            id: '6572',
+            name: 'Avocados',
             _metadata: {
-              hierarchy: ['412', '412.413', '412.413.2628']
+              hierarchy: ['422', '422.5793', '422.5793.6572']
             }});
         }));
   });
