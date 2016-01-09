@@ -282,7 +282,7 @@ describe('payload validation', () => {
         specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {[attribute.taxable]: 1})})
           .then(response => {
             expect(response.statusCode).to.equal(400);
-            expect(response.result.message).to.equal(`child "${attribute.name}" fails because ["${attribute.name}" must be a boolean]`);
+            expect(response.result.message).to.equal(`child "${attribute.taxable}" fails because ["${attribute.taxable}" must be a boolean]`);
           })
       );
     });
