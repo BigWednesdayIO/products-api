@@ -277,16 +277,6 @@ describe('payload validation', () => {
       );
     });
 
-    attributes.filter(a => a.type === 'boolean').forEach(attribute => {
-      it(`rejects non-boolean ${attribute.taxable} values for ${request.method} request`, () =>
-        specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {[attribute.taxable]: 1})})
-          .then(response => {
-            expect(response.statusCode).to.equal(400);
-            expect(response.result.message).to.equal(`child "${attribute.taxable}" fails because ["${attribute.taxable}" must be a boolean]`);
-          })
-      );
-    });
-
     it(`rejects unknown product_type values for ${request.method} request`, () =>
       specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {product_type: '123'})})
         .then(response => {
