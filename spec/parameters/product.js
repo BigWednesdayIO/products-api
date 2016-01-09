@@ -7,6 +7,7 @@ module.exports = {
   category_id: '6572',
   description: 'this is a really really really nice avocado',
   short_description: 'this is a nice avocado',
+  taxable: false,
   product_type_attributes: [
     {name: 'test_attribute', values: ['a']}
   ]

@@ -248,10 +248,11 @@ describe('payload validation', () => {
   const attributes = [
     {name: 'name', type: 'string', required: true},
     {name: 'product_type', type: 'string', required: true},
-    {name: 'brand', type: 'string', required: true},
+    {name: 'brand', type: 'string'},
     {name: 'category_id', type: 'string', required: true},
     {name: 'short_description', type: 'string'},
     {name: 'description', type: 'string'},
+    {name: 'taxable', type: 'boolean', required: true},
     {name: 'product_type_attributes', type: 'array', required: true}
   ];
 
@@ -272,6 +273,16 @@ describe('payload validation', () => {
           .then(response => {
             expect(response.statusCode).to.equal(400);
             expect(response.result.message).to.equal(`child "${attribute.name}" fails because ["${attribute.name}" must be a string]`);
+          })
+      );
+    });
+
+    attributes.filter(a => a.type === 'boolean').forEach(attribute => {
+      it(`rejects non-boolean ${attribute.name} values for ${request.method} request`, () =>
+        specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {[attribute.name]: 1})})
+          .then(response => {
+            expect(response.statusCode).to.equal(400);
+            expect(response.result.message).to.equal(`child "${attribute.name}" fails because ["${attribute.name}" must be a boolean]`);
           })
       );
     });
