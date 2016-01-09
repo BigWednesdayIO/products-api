@@ -278,8 +278,8 @@ describe('payload validation', () => {
     });
 
     attributes.filter(a => a.type === 'boolean').forEach(attribute => {
-      it(`rejects non-boolean ${attribute.name} values for ${request.method} request`, () =>
-        specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {[attribute.name]: 1})})
+      it(`rejects non-boolean ${attribute.taxable} values for ${request.method} request`, () =>
+        specRequest({url: request.url, method: request.method, headers: {authorization: authToken()}, payload: Object.assign({}, productParameters, {[attribute.taxable]: 1})})
           .then(response => {
             expect(response.statusCode).to.equal(400);
             expect(response.result.message).to.equal(`child "${attribute.name}" fails because ["${attribute.name}" must be a boolean]`);
