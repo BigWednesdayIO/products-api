@@ -248,10 +248,11 @@ describe('payload validation', () => {
   const attributes = [
     {name: 'name', type: 'string', required: true},
     {name: 'product_type', type: 'string', required: true},
-    {name: 'brand', type: 'string', required: true},
+    {name: 'brand', type: 'string'},
     {name: 'category_id', type: 'string', required: true},
     {name: 'short_description', type: 'string'},
     {name: 'description', type: 'string'},
+    {name: 'taxable', type: 'boolean', required: true},
     {name: 'product_type_attributes', type: 'array', required: true}
   ];
 

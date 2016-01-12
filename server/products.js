@@ -24,9 +24,10 @@ const productTypes = [
 
 const baseAttributes = {
   name: Joi.string().required().description('Product name'),
-  brand: Joi.string().required().description('Brand'),
+  brand: Joi.string().description('Brand'),
   description: Joi.string().description('Description'),
   short_description: Joi.string().description('Short description'),
+  taxable: Joi.boolean().required().description('Specifies whether the item is taxable'),
   product_type: Joi.string().valid(productTypes.map(t => t.name)).required().description('Product type'),
   product_type_attributes: Joi.array().items(Joi.object({
     name: Joi.string().required().description('Attribute name'),
