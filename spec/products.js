@@ -84,7 +84,7 @@ describe('/products', () => {
             id: '6572',
             name: 'Avocados',
             _metadata: {
-              hierarchy: ['422', '422.5793', '422.5793.6572']
+              hierarchy: ['412', '412.5793', '412.5793.6572']
             }});
         });
       }));
@@ -165,7 +165,7 @@ describe('/products/{id}', () => {
             id: '6572',
             name: 'Avocados',
             _metadata: {
-              hierarchy: ['422', '422.5793', '422.5793.6572']
+              hierarchy: ['412', '412.5793', '412.5793.6572']
             }});
         }));
   });
