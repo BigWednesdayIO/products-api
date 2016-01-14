@@ -28,7 +28,7 @@ const baseAttributes = {
   description: Joi.string().description('Description'),
   short_description: Joi.string().description('Short description'),
   taxable: Joi.boolean().required().description('Specifies whether the item is taxable'),
-  pack_size: Joi.string().description('Pack size'),
+  pack_size: Joi.number().description('Pack size'),
   unit_size: Joi.string().description('Unit size'),
   product_type: Joi.string().valid(productTypes.map(t => t.name)).required().description('Product type'),
   product_type_attributes: Joi.array().items(Joi.object({
