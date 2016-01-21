@@ -27,9 +27,10 @@ const baseAttributes = {
   brand: Joi.string().description('Brand'),
   description: Joi.string().description('Description'),
   short_description: Joi.string().description('Short description'),
-  taxable: Joi.boolean().required().description('Specifies whether the item is taxable'),
   pack_size: Joi.number().description('Pack size'),
   unit_size: Joi.string().description('Unit size'),
+  taxable: Joi.boolean().required().description('Specifies whether the item is taxable'),
+  in_stock: Joi.boolean().required().description('Specifies if the product is in stock or not'),
   product_type: Joi.string().valid(productTypes.map(t => t.name)).required().description('Product type'),
   product_type_attributes: Joi.array().items(Joi.object({
     name: Joi.string().required().description('Attribute name'),

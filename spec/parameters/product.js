@@ -10,6 +10,7 @@ module.exports = {
   pack_size: 24,
   unit_size: 'test_unit_size',
   taxable: false,
+  in_stock: true,
   product_type_attributes: [
     {name: 'test_attribute', values: ['a']}
   ]

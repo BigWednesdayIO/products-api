@@ -255,6 +255,7 @@ describe('payload validation', () => {
     {name: 'pack_size', type: 'number'},
     {name: 'unit_size', type: 'string'},
     {name: 'taxable', type: 'boolean', required: true},
+    {name: 'in_stock', type: 'boolean', required: true},
     {name: 'product_type_attributes', type: 'array', required: true}
   ];
 
